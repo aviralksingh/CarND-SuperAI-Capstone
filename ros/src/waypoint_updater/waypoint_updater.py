@@ -59,7 +59,7 @@ class WaypointUpdater(object):
                 #closest_idx = self.closest_waypoint_idx()
                 #final_waypoints = self.waypoints[closest_idx:closest_idx + LOOKAHEAD_WPS]
 
-                # TODO Check traffic light state
+                # Call Publish_Waypoints
                 self.publish_waypoints()
                 #lane = Lane()
                 #lane.waypoints = final_waypoints
@@ -89,7 +89,7 @@ class WaypointUpdater(object):
         rospy.loginfo("Base waypoints data processed, unsubscribed from /base_waypoints")
 
     def traffic_cb(self, msg):
-        # TODO: Callback for /traffic_waypoint message. Implement
+        #Callback for /traffic_waypoint message and return the stop line index data
         self.stop_line_idx=msg.data
 
     def closest_waypoint_idx(self):
