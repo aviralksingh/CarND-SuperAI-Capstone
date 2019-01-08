@@ -28,7 +28,7 @@ RUN apt-get install -y ros-$ROS_DISTRO-image-proc
 # socket io
 RUN apt-get install -y netbase
 RUN pip install --upgrade pillow==5.4.0
-RUN apt-get install ros-kinetic-image-view
+RUN apt-get install -y ros-kinetic-image-view
 
 RUN mkdir /capstone
 VOLUME ["/capstone"]
