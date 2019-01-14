@@ -11,4 +11,7 @@ stop_line_positions:
     - [161.76, 2303.82]
     - [351.84, 1574.65]
 is_site: False
-use_light_state: True
+use_light_state: False
+classifier:
+  threshold: 0.5
+  model_path: "ssd_mobilenet_v2/graph_optimized.pb"

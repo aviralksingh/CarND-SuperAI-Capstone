@@ -25,7 +25,6 @@ class TLDetector(object):
 
         self.config = yaml.load(config_string)
         self.is_site = self.config['is_site']
-        print(" Is Site %d" % self.is_site)
 
         self.current_pose = None
         self.waypoints = None
@@ -37,13 +36,13 @@ class TLDetector(object):
         self.light_waypoint_idx = -1
         self.light_state_count = 0
         self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
+        self.light_classifier = None
 
         # Check if we force the usage of the simulator light state, not available when on site
         if self.config['use_light_state'] and not self.is_site:
             rospy.logwarn('Classifier disabled, using simulator light state')
         else:
-            self.light_classifier = TLClassifier()
+            self.light_classifier = TLClassifier(self.config)
 
         # Subscribers
         self.base_waypoints_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -163,8 +162,9 @@ class TLDetector(object):
         if not self.light_classifier:
             light_state = light.state
         elif self.camera_image:
-            cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
-            light_state = self.light_classifier.get_classification(cv_image)
+            bgr_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+            image_rgb = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+            light_state = self.light_classifier.get_classification(image_rgb)
 
         return light_state
 
