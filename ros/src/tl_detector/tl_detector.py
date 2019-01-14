@@ -22,9 +22,11 @@ class TLDetector(object):
 
         # Load configuration
         config_string = rospy.get_param("/traffic_light_config")
-        
+
         self.config = yaml.load(config_string)
         self.is_site = self.config['is_site']
+        print(" Is Site %d" % self.is_site)
+
         self.current_pose = None
         self.waypoints = None
         self.waypoints_tree = None
@@ -33,9 +35,9 @@ class TLDetector(object):
         self.lights = []
         self.light_state = TrafficLight.UNKNOWN
         self.light_waypoint_idx = -1
-        self.light_state_count = 0        
+        self.light_state_count = 0
         self.bridge = CvBridge()
-        self.light_classifier = None
+        self.light_classifier = TLClassifier()
 
         # Check if we force the usage of the simulator light state, not available when on site
         if self.config['use_light_state'] and not self.is_site:
@@ -72,7 +74,7 @@ class TLDetector(object):
         of times till we start using it. Otherwise the previous stable state is
         used.
         '''
-        
+
         if self.light_state != light_state:
             self.light_state_count = 0
             self.light_state = light_state
@@ -116,7 +118,7 @@ class TLDetector(object):
         closest_light_state = TrafficLight.UNKNOWN
 
         if self.current_pose:
-            
+
             vehicle_position = [self.current_pose.position.x, self.current_pose.position.y]
             vehicle_idx = self.closest_waypoint_idx(vehicle_position)
             min_distance = len(self.waypoints)
