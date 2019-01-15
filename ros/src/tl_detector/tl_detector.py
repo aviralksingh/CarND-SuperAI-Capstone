@@ -18,7 +18,8 @@ SYNC_QUEUE_SIZE = 10
 
 class TLDetector(object):
     def __init__(self):
-        rospy.init_node('tl_detector')
+        # rospy.init_node('tl_detector')
+        rospy.init_node('tl_detector', log_level=rospy.DEBUG)
 
         # Load configuration
         config_string = rospy.get_param("/traffic_light_config")
@@ -64,6 +65,9 @@ class TLDetector(object):
         self.lights = lights_msg.lights
         self.current_pose = pose_msg.pose
         self.camera_image = image_msg
+
+        if not self.waypoints_tree:
+            return
 
         light_waypoint_idx, light_state = self.process_traffic_lights()
 
@@ -162,8 +166,7 @@ class TLDetector(object):
         if not self.light_classifier:
             light_state = light.state
         elif self.camera_image:
-            bgr_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
-            image_rgb = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+            image_rgb = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
             light_state = self.light_classifier.get_classification(image_rgb)
 
         return light_state
