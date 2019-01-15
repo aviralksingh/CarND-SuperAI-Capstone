@@ -9,4 +9,4 @@ is_site: True
 use_light_state: False
 classifier:
   threshold: 0.5
-  model_path: "ssd_mobilenet_v2/graph_optimized.pb"
+  model_path: "models/ssd_mobilenet_v2/graph_optimized.pb"
