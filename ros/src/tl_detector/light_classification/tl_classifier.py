@@ -24,6 +24,8 @@ class TLClassifier(object):
     def load_model(self, model_path):
         base_folder = os.path.dirname(os.path.realpath(__file__))
         model_path = os.path.join(base_folder, model_path)
+        
+        rospy.loginfo('Loading model: %s', model_path)
 
         graph = tf.Graph()
         
@@ -44,7 +46,8 @@ class TLClassifier(object):
 
     def warmup_model(self):
         image = np.zeros((self.image_size[0], self.image_size[1], 3), dtype=np.uint8)
-        _ = self.detect_light(image)
+        _, elapsed_time = self.detect_light(image)
+        rospy.loginfo('Tensorflow warmup completed (Time elapsed: %.3f ms)', elapsed_time)
 
     def get_detected_class(self, detection_scores, detection_classes):
         if detection_scores[0] >= self.threshold:
@@ -62,7 +65,7 @@ class TLClassifier(object):
         detection_scores = detection_scores[0]
         detection_classes = detection_classes[0].astype(np.uint8)
 
-        return self.get_detected_class(detection_scores, detection_classes), e_time
+        return self.get_detected_class(detection_scores, detection_classes), e_time * 1000.0
 
     def get_classification(self, image_rgb):
         """Determines the color of the traffic light in the image
@@ -77,5 +80,8 @@ class TLClassifier(object):
         detected_light, elapsed_time = self.detect_light(image_rgb)
         self.total_time += elapsed_time
         self.num_detections += 1
+
+        if self.num_detections % 50 == 0:
+            rospy.logdebug('Detections: %s, Avg Detection Time: %.3f ms', self.num_detections, self.total_time / self.num_detections)
 
         return detected_light
