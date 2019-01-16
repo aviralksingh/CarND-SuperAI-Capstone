@@ -31,6 +31,7 @@ class TLDetector(object):
         self.current_pose = None
         self.waypoints = None
         self.waypoints_tree = None
+        self.ready = False
         self.stop_line_positions_idx = []
         self.camera_image = None
         self.lights = []
@@ -40,23 +41,26 @@ class TLDetector(object):
         self.bridge = CvBridge()
         self.light_classifier = None
 
+        self.base_waypoints_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
+
+        # Subscribers
+        subscribers = [Subscriber("/vehicle/traffic_lights", TrafficLightArray),
+                       Subscriber('/current_pose', PoseStamped)]
+        
         # Check if we force the usage of the simulator light state, not available when on site
         if self.config['use_light_state'] and not self.is_site:
             rospy.logwarn('Classifier disabled, using simulator light state')
+            # Note that we do not subscribe to the camera image
         else:
+            # Setup the classifier
             self.light_classifier = TLClassifier(self.config)
-
-        # Subscribers
-        self.base_waypoints_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-
-        self.synced_sub = ApproximateTimeSynchronizer([Subscriber("/vehicle/traffic_lights", TrafficLightArray),
-                                                       Subscriber("/current_pose", PoseStamped),
-                                                       Subscriber("/image_color", Image)],
-                                                       # TODO Find out, this should greatly improve performance:
-                                                       # Subscriber("/image_color", Image, queue_size=1, buff_size=???)
-                                                       # buff_size should be greater than queue_size * avg_msg_byte_size
-                                                       SYNC_QUEUE_SIZE, 0.1)
-
+            # When the classifier is enabled then the camera image needs to be in sync with the current_pose
+            subscribers.append(Subscriber('/image_color', Image))
+            # TODO Find out, this should greatly improve performance:
+            # Subscriber('/image_color', Image, queue_size=1, buff_size=???)
+            # buff_size should be greater than queue_size * avg_msg_byte_size
+            
+        self.synced_sub = ApproximateTimeSynchronizer(subscribers, SYNC_QUEUE_SIZE, 0.1)
         self.synced_sub.registerCallback(self.synced_data_cb)
 
         # Publisher
@@ -64,15 +68,12 @@ class TLDetector(object):
 
         rospy.spin()
 
-    def ready(self):
-        return self.current_pose is not None and self.camera_image is not None and self.waypoints_tree is not None
-
-    def synced_data_cb(self, lights_msg, pose_msg, image_msg):
+    def synced_data_cb(self, lights_msg, pose_msg, image_msg = None):
         self.lights = lights_msg.lights
         self.current_pose = pose_msg.pose
         self.camera_image = image_msg
 
-        if self.ready():
+        if self.ready:
             light_waypoint_idx, light_state = self.process_traffic_lights()
 
             '''
@@ -90,6 +91,7 @@ class TLDetector(object):
                 self.upcoming_red_light_pub.publish(Int32(light_waypoint_idx))
             else:
                 self.upcoming_red_light_pub.publish(Int32(self.light_waypoint_idx))
+
             self.light_state_count += 1
 
     def waypoints_cb(self, msg):
@@ -101,9 +103,10 @@ class TLDetector(object):
 
             # Precomputes the stop line position index
             stop_line_positions = self.config['stop_line_positions']
-            self.stop_line_positions_idx = [self.closest_waypoint_idx(stop_line_position) for stop_line_position in stop_line_positions]
+            self.stop_line_positions_idx = [self.find_closest_waypoint_idx(stop_line_position) for stop_line_position in stop_line_positions]
             rospy.logdebug('Stop line positions: %s', stop_line_positions)
             rospy.logdebug('Stop line positions index: %s', self.stop_line_positions_idx)
+            self.ready = True
 
         # Unsubscribe as we do not need the base waypoints anymore
         self.base_waypoints_sub.unregister()
@@ -123,29 +126,31 @@ class TLDetector(object):
         camera_image = self.camera_image
 
         vehicle_position = [self.current_pose.position.x, self.current_pose.position.y]
-        vehicle_idx = self.closest_waypoint_idx(vehicle_position)
+        vehicle_idx = self.find_closest_waypoint_idx(vehicle_position)
 
-        closest_light, closest_light_idx = self.closest_light(vehicle_idx)
         closest_light_state = TrafficLight.UNKNOWN
-
+        closest_light, closest_light_idx = self.find_closest_light(vehicle_idx)
+        
         if closest_light is not None:
             closest_light_state = self.get_light_state(closest_light, camera_image)
 
         return closest_light_idx, closest_light_state
 
-    def closest_light(self, vehicle_idx):
+    def find_closest_light(self, vehicle_idx):
         closest_light = None
         closest_light_idx = -1
         min_distance = len(self.waypoints)
+        
         for light, stop_line_idx in zip(self.lights, self.stop_line_positions_idx):
             stop_line_distance = stop_line_idx - vehicle_idx
             if stop_line_distance >= 0 and stop_line_distance < self.lookahead_waypoints and stop_line_distance < min_distance:
                 min_distance = stop_line_distance
                 closest_light = light
                 closest_light_idx = stop_line_idx
+
         return closest_light, closest_light_idx
 
-    def closest_waypoint_idx(self, position):
+    def find_closest_waypoint_idx(self, position):
         """Identifies the closest path waypoint to the given position
             https://en.wikipedia.org/wiki/Closest_pair_of_points_problem
         Args:
@@ -157,7 +162,7 @@ class TLDetector(object):
         """
         return self.waypoints_tree.query(position, 1)[1]
 
-    def get_light_state(self, light, image_msg):
+    def get_light_state(self, light, image_msg = None):
         """Determines the current color of the traffic light
 
         Args:
@@ -173,7 +178,7 @@ class TLDetector(object):
         # If no classifier is available uses the light state
         if self.light_classifier is None:
             light_state = light.state
-        else:
+        elif image_msg is not None:
             image_rgb = self.bridge.imgmsg_to_cv2(image_msg, "rgb8")
             light_state = self.light_classifier.get_classification(image_rgb)
 
