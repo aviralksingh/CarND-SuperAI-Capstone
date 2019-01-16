@@ -26,6 +26,7 @@ class TLDetector(object):
 
         self.config = yaml.load(config_string)
         self.is_site = self.config['is_site']
+        self.lookahead_waypoints = self.config['lookahead_waypoints']
 
         self.current_pose = None
         self.waypoints = None
@@ -50,7 +51,10 @@ class TLDetector(object):
 
         self.synced_sub = ApproximateTimeSynchronizer([Subscriber("/vehicle/traffic_lights", TrafficLightArray),
                                                        Subscriber("/current_pose", PoseStamped),
-                                                       Subscriber("/image_color", Image)], # TODO Check buff_size if it helps
+                                                       Subscriber("/image_color", Image)],
+                                                       # TODO Find out, this should greatly improve performance:
+                                                       # Subscriber("/image_color", Image, queue_size=1, buff_size=???)
+                                                       # buff_size should be greater than queue_size * avg_msg_byte_size
                                                        SYNC_QUEUE_SIZE, 0.1)
 
         self.synced_sub.registerCallback(self.synced_data_cb)
@@ -115,26 +119,31 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        closest_light = None
-        closest_light_idx = -1
-        closest_light_state = TrafficLight.UNKNOWN
+        
         camera_image = self.camera_image
 
         vehicle_position = [self.current_pose.position.x, self.current_pose.position.y]
         vehicle_idx = self.closest_waypoint_idx(vehicle_position)
-        min_distance = len(self.waypoints)
 
-        for light, stop_line_idx in zip(self.lights, self.stop_line_positions_idx):
-            stop_line_distance = stop_line_idx - vehicle_idx
-            if stop_line_distance >= 0 and stop_line_distance < min_distance:
-                min_distance = stop_line_distance
-                closest_light = light
-                closest_light_idx = stop_line_idx
+        closest_light, closest_light_idx = self.closest_light(vehicle_idx)
+        closest_light_state = TrafficLight.UNKNOWN
 
         if closest_light is not None:
             closest_light_state = self.get_light_state(closest_light, camera_image)
 
         return closest_light_idx, closest_light_state
+
+    def closest_light(self, vehicle_idx):
+        closest_light = None
+        closest_light_idx = -1
+        min_distance = len(self.waypoints)
+        for light, stop_line_idx in zip(self.lights, self.stop_line_positions_idx):
+            stop_line_distance = stop_line_idx - vehicle_idx
+            if stop_line_distance >= 0 and stop_line_distance < self.lookahead_waypoints and stop_line_distance < min_distance:
+                min_distance = stop_line_distance
+                closest_light = light
+                closest_light_idx = stop_line_idx
+        return closest_light, closest_light_idx
 
     def closest_waypoint_idx(self, position):
         """Identifies the closest path waypoint to the given position
