@@ -61,7 +61,7 @@ class TLDetector(object):
         rospy.spin()
 
     def ready(self):
-        return self.waypoints_tree is not None
+        return self.current_pose is not None and self.camera_image is not None and self.waypoints_tree is not None
 
     def synced_data_cb(self, lights_msg, pose_msg, image_msg):
         self.lights = lights_msg.lights
@@ -91,7 +91,7 @@ class TLDetector(object):
     def waypoints_cb(self, msg):
         self.waypoints = msg.waypoints
 
-        if not self.waypoints_tree:
+        if self.waypoints_tree is None:
             waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in self.waypoints]
             self.waypoints_tree = KDTree(waypoints_2d)
 
@@ -120,20 +120,18 @@ class TLDetector(object):
         closest_light_state = TrafficLight.UNKNOWN
         camera_image = self.camera_image
 
-        if self.current_pose:
+        vehicle_position = [self.current_pose.position.x, self.current_pose.position.y]
+        vehicle_idx = self.closest_waypoint_idx(vehicle_position)
+        min_distance = len(self.waypoints)
 
-            vehicle_position = [self.current_pose.position.x, self.current_pose.position.y]
-            vehicle_idx = self.closest_waypoint_idx(vehicle_position)
-            min_distance = len(self.waypoints)
+        for light, stop_line_idx in zip(self.lights, self.stop_line_positions_idx):
+            stop_line_distance = stop_line_idx - vehicle_idx
+            if stop_line_distance >= 0 and stop_line_distance < min_distance:
+                min_distance = stop_line_distance
+                closest_light = light
+                closest_light_idx = stop_line_idx
 
-            for light, stop_line_idx in zip(self.lights, self.stop_line_positions_idx):
-                stop_line_distance = stop_line_idx - vehicle_idx
-                if stop_line_distance >= 0 and stop_line_distance < min_distance:
-                    min_distance = stop_line_distance
-                    closest_light = light
-                    closest_light_idx = stop_line_idx
-
-        if closest_light:
+        if closest_light is not None:
             closest_light_state = self.get_light_state(closest_light, camera_image)
 
         return closest_light_idx, closest_light_state
@@ -163,10 +161,10 @@ class TLDetector(object):
         """
         light_state = TrafficLight.UNKNOWN
 
-        # If not classifier is available uses the light state
-        if not self.light_classifier:
+        # If no classifier is available uses the light state
+        if self.light_classifier is None:
             light_state = light.state
-        elif image_msg:
+        else:
             image_rgb = self.bridge.imgmsg_to_cv2(image_msg, "rgb8")
             light_state = self.light_classifier.get_classification(image_rgb)
 
