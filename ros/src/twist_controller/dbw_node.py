@@ -43,6 +43,7 @@ class EgoParams(object):
         self.steer_ratio = None
         self.max_lat_accel = None
         self.max_steer_angle = None
+        self.previous_debug_time = None
 class DBWNode(object):
     def __init__(self):
         rospy.init_node('dbw_node')
@@ -76,6 +77,7 @@ class DBWNode(object):
         self.linear_vel = None
         self.angular_vel= None
         self.throttle=self.steering=self.brake=0
+        self.previous_debug_time = rospy.get_rostime()
 
         # TODO: Subscribe to all the topics you need to
         rospy.Subscriber('/vehicle/dbw_enabled',Bool, self.dbw_enabled_cb)
@@ -85,6 +87,7 @@ class DBWNode(object):
         self.loop()
 
     def loop(self):
+        SPEED_DEBUG = 1
         rate = rospy.Rate(50) # 50Hz
         while not rospy.is_shutdown():
             if not None in(self.current_vel, self.linear_vel, self.angular_vel):
@@ -94,6 +97,9 @@ class DBWNode(object):
                                                                  self.angular_vel)
             if self.dbw_enabled:
                self.publish(self.throttle, self.brake, self.steering)
+               if SPEED_DEBUG:
+                  self.print_debug_info(self.throttle, self.brake, self.current_vel, self.linear_vel)
+
             rate.sleep()
     def dbw_enabled_cb(self,msg):
         self.dbw_enabled =msg
@@ -122,6 +128,24 @@ class DBWNode(object):
         bcmd.pedal_cmd_type = BrakeCmd.CMD_TORQUE
         bcmd.pedal_cmd = brake
         self.brake_pub.publish(bcmd)
+
+    def print_debug_info(self, throttle, brake, veh_speed, speed_target):
+        """
+        Print debugging commands. Only prints out if enough time has passed since last printout
+        """
+
+        current_time = rospy.get_rostime()
+        ros_duration_since_debug = current_time - self.previous_debug_time
+        duration_since_debug_in_seconds = ros_duration_since_debug.secs + (1e-9 * ros_duration_since_debug.nsecs)
+
+        if duration_since_debug_in_seconds > 1.0:
+            rospy.logwarn("Throttle: {}".format(throttle))
+            rospy.logwarn("Brake: {}".format(brake))
+            rospy.logwarn("Vehicle Speed: {}".format(veh_speed))
+            rospy.logwarn("Speed target: {}".format(speed_target))
+        #   rospy.logwarn("velocity_error: {}".format(velocity_error))
+
+            self.previous_debug_time = current_time
 
 
 if __name__ == '__main__':
