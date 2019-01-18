@@ -6,9 +6,9 @@ from lowpass import LowPassFilter
 from yaw_controller import YawController
 
 class Controller(object):
-'''
-Define a class for the calculation of throttle, brake, steering.
-'''
+
+#Define a class for the calculation of throttle, brake, steering.
+
 
     def __init__(self, EgoParam):
 
@@ -24,18 +24,18 @@ Define a class for the calculation of throttle, brake, steering.
         min_speed=0.1,
         max_lat_accel= EgoParam.max_lat_accel,
         max_steer_angle= EgoParam.max_steer_angle)
-        
+
         self.EgoParam=EgoParam
 
         '''
         Throttle controller call for function in pid.py
         return:
-            throttle calculation functions
+           throttle calculation functions
         '''
         self.throttle_controller = PID(kp=0.3,ki=0.1,kd=0.0,mn = EgoParam.decel_limit,mx=EgoParam.accel_limit)
- 
-        tau=0.5 
-        ts = 0.02 
+
+        tau=0.5
+        ts = 0.02
 
         self.vel_lpf = LowPassFilter(tau,ts)
         self.last_time = rospy.get_time()
@@ -72,7 +72,7 @@ Define a class for the calculation of throttle, brake, steering.
 
         if linear_vel ==0.0 and current_vel<0.1:
             throttle=0
-            brake=700 
+            brake=700
         elif throttle<0.1 and vel_error<0:
             throttle=0
             decel=max(vel_error, self.EgoParam.decel_limit)

@@ -10,7 +10,7 @@ from twist_controller import Controller
 
 '''
 This node will subscribe:
-'dbw_enabled' --------> Boolean value represent whether dbw is enabled. 
+'dbw_enabled' --------> Boolean value represent whether dbw is enabled.
 'throttle_cmd' -------> Proposed linear and angular velocity.
 'current_velocity' ---> Current vehicle velocity.
 
@@ -25,9 +25,9 @@ ONE_MPH = 0.44704
 
 class EgoParams(object):
 
-'''
-Define a class containing all vehicle parameters.
-'''
+
+#Define a class containing all vehicle parameters.
+
 
     def __init__(self):
         self.vehicle_mass = None
@@ -42,9 +42,9 @@ Define a class containing all vehicle parameters.
         self.max_steer_angle = None
 
 class DBWNode(object):
-'''
-Define a class running dbw node.
-'''
+
+#Define a class running dbw node.
+
 
     def __init__(self):
         rospy.init_node('dbw_node')
@@ -69,7 +69,7 @@ Define a class running dbw node.
         self.brake_pub = rospy.Publisher('/vehicle/brake_cmd',
                                          BrakeCmd, queue_size=1)
 
-        # Create "Controller" object, will return throttle, brake, steering. 
+        # Create "Controller" object, will return throttle, brake, steering.
         self.controller= Controller(EgoParam= EgoParam)
         self.current_vel= None
         self.curr_ang_vel = None
@@ -90,7 +90,7 @@ Define a class running dbw node.
         '''
         Calculte the upcoming throttle, brake, and steering information.
         Publish the calculated information.
-        Calculation and publish information all based on the set rate (50Hz). 
+        Calculation and publish information all based on the set rate (50Hz).
         '''
 
         rate = rospy.Rate(50)

@@ -1,9 +1,9 @@
 from math import atan
 
 class YawController(object):
-'''
-Define a class for the calculation of yaw angle.
-'''
+
+#Define a class for the calculation of yaw angle.
+
 
     def __init__(self, wheel_base, steer_ratio, min_speed, max_lat_accel, max_steer_angle):
         self.wheel_base = wheel_base
