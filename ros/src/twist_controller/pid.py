@@ -4,9 +4,9 @@ MAX_NUM = float('inf')
 
 
 class PID(object):
-'''
-Define a class for PID controller.
-'''
+
+#Define a class for PID controller.
+
 
     def __init__(self, kp, ki, kd, mn=MIN_NUM, mx=MAX_NUM):
         self.kp = kp

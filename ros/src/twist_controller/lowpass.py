@@ -1,8 +1,8 @@
 
 class LowPassFilter(object):
-'''
-Define a class for low pass filter.
-'''
+
+#Define a class for low pass filter.
+
 
     def __init__(self, tau, ts):
         self.a = 1. / (tau / ts + 1.)
