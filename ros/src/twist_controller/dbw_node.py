@@ -20,6 +20,9 @@ This node will publish:
 'BrakeCmd' -----------> Brake torque.
 '''
 
+GAS_DENSITY = 2.858
+ONE_MPH = 0.44704
+
 class EgoParams(object):
 
 '''
@@ -57,6 +60,7 @@ Define a class running dbw node.
         EgoParam.steer_ratio = rospy.get_param('~steer_ratio', 14.8)
         EgoParam.max_lat_accel = rospy.get_param('~max_lat_accel', 3.)
         EgoParam.max_steer_angle = rospy.get_param('~max_steer_angle', 8.)
+        EgoParam.total_vehicle_mass = EgoParam.vehicle_mass + EgoParam.fuel_capacity * GAS_DENSITY
 
         self.steer_pub = rospy.Publisher('/vehicle/steering_cmd',
                                          SteeringCmd, queue_size=1)

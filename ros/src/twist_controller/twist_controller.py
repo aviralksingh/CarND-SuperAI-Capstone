@@ -5,11 +5,6 @@ from lowpass import LowPassFilter
 
 from yaw_controller import YawController
 
-GAS_DENSITY = 2.858
-ONE_MPH = 0.44704
-
-
-
 class Controller(object):
 '''
 Define a class for the calculation of throttle, brake, steering.
@@ -81,6 +76,6 @@ Define a class for the calculation of throttle, brake, steering.
         elif throttle<0.1 and vel_error<0:
             throttle=0
             decel=max(vel_error, self.EgoParam.decel_limit)
-            brake=abs(decel)*self.EgoParam.vehicle_mass *self.EgoParam.wheel_radius
+            brake=abs(decel)*self.EgoParam.total_vehicle_mass *self.EgoParam.wheel_radius
 
         return throttle, brake, steering
