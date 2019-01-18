@@ -9,7 +9,7 @@ this way the classification task is reduced into the same network.
 
 The documentation and code used for training can be found [here](https://github.com/Az4z3l/CarND-Traffic-Light-Detection).
 
-The data for training was collected from both the simulator, recording a bag and then saving the camera images and from a bag provided by udacity tha can be downloaded from [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/traffic_light_bag_file.zip).
+The data for training was collected from both the simulator, recording a bag and then saving the camera images and from a bag provided by udacity that can be downloaded from [here](https://s3-us-west-1.amazonaws.com/udacity-selfdrivingcar/traffic_light_bag_file.zip).
 
 Additional bags are provided by udacity for testing the detector in the real world that were recorded at the [Test Site](https://drive.google.com/file/d/0B2_h37bMVw3iYkdJTlRSUlJIamM/view?usp=sharing).
 

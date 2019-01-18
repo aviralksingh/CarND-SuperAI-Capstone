@@ -22,7 +22,7 @@ class TLDetector(object):
         rospy.init_node('tl_detector', log_level=rospy.DEBUG)
 
         # Load configuration
-        config_string = rospy.get_param("/traffic_light_config")
+        config_string = rospy.get_param('/traffic_light_config')
 
         self.config = yaml.load(config_string)
         self.is_site = self.config['is_site']
@@ -44,7 +44,7 @@ class TLDetector(object):
         self.base_waypoints_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
         # Subscribers
-        subscribers = [Subscriber("/vehicle/traffic_lights", TrafficLightArray),
+        subscribers = [Subscriber('/vehicle/traffic_lights', TrafficLightArray),
                        Subscriber('/current_pose', PoseStamped)]
         
         # Check if we force the usage of the simulator light state, not available when on site
@@ -111,7 +111,7 @@ class TLDetector(object):
         # Unsubscribe as we do not need the base waypoints anymore
         self.base_waypoints_sub.unregister()
 
-        rospy.loginfo("Base waypoints data processed, unsubscribed from /base_waypoints")
+        rospy.loginfo('Base waypoints data processed, unsubscribed from /base_waypoints')
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
