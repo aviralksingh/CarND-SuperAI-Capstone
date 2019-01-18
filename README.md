@@ -1,8 +1,9 @@
-# Udacity Self-Driving Car Nanodegree: System Integration - SuperAI Team <!-- omit in toc --> 
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive) <!-- omit in toc --> 
----
+# Udacity Self-Driving Car Nanodegree: System Integration <!-- omit in toc --> 
+[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive) <!-- omit in toc -->
 
-Team Members <!-- omit in toc -->
+![Self Driving](./imgs/red_2_green.gif)
+
+Team **SuperAI** Members <!-- omit in toc -->
 ---
 
 * [Aviral Singh](https://github.com/aviralksingh)
@@ -75,7 +76,9 @@ Various models were fine-tuned and tested, for more details about the whole proc
 
 The waypoint updater node takes care of generating a trajectory in terms of waypoints so that the [waypoint follower](./ros/src/waypoint_follower) can generate the correct [Twist Messages](https://docs.ros.org/api/geometry_msgs/html/msg/Twist.html) consumed by the [DBW Node](./ros/src/twist_controller/dbw_node.py). Each of the waypoints are generated from a subset of the overall set of waypoints provided according to the vehicle position (published in the `/current_pose` topic). For each waypoint a target velocity is generated to smoothen the transition between each waypoint.
 
-The node also subscribes to the `/traffic_waypoint` topic published by the [Traffic Light Detection Node](#traffic-light-detection) in order to adjust the waypoints in the presence of a red light.
+The node also subscribes to the `/traffic_waypoint` topic published by the [Traffic Light Detection Node](#traffic-light-detection) in order to adjust the waypoints in the presence of a red light:
+
+![Slowing down](./imgs/red_2_green_speedup.gif)
 
 Finally the node publishes the list of waypoints ahead of the vehicle to the `/final_waypoints` topic.
 
