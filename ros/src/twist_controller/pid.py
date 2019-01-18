@@ -4,6 +4,10 @@ MAX_NUM = float('inf')
 
 
 class PID(object):
+'''
+Define a class for PID controller.
+'''
+
     def __init__(self, kp, ki, kd, mn=MIN_NUM, mx=MAX_NUM):
         self.kp = kp
         self.ki = ki
@@ -17,6 +21,14 @@ class PID(object):
         self.int_val = 0.0
 
     def step(self, error, sample_time):
+        '''
+        Args:
+            error: culmulated error between current and predicted
+            sample_time: time gap between two calculations
+
+        Returns:
+            penalty due to cumulated error
+        '''
 
         integral = self.int_val + error * sample_time;
         derivative = (error - self.last_error) / sample_time;

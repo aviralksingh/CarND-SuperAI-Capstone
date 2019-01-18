@@ -5,15 +5,19 @@ from lowpass import LowPassFilter
 
 from yaw_controller import YawController
 
-GAS_DENSITY = 2.858
-ONE_MPH = 0.44704
-
-
-
 class Controller(object):
-    def __init__(self, EgoParam):
-        # TODO: Implement
+'''
+Define a class for the calculation of throttle, brake, steering.
+'''
 
+    def __init__(self, EgoParam):
+
+        '''
+        Claimed yaw controller for future use.
+        Input for yaw controller:
+            Vehicle's information of wheel base, steer ratio, maximum lateral acceleration, and maximum steer angle.
+            Manually given minimum speed for angle calculation
+        '''
         self.yaw_controller = YawController(
         wheel_base= EgoParam.wheel_base,
         steer_ratio = EgoParam.steer_ratio,
@@ -23,19 +27,31 @@ class Controller(object):
         
         self.EgoParam=EgoParam
 
-
+        '''
+        Throttle controller call for function in pid.py
+        return:
+            throttle calculation functions
+        '''
         self.throttle_controller = PID(kp=0.3,ki=0.1,kd=0.0,mn = EgoParam.decel_limit,mx=EgoParam.accel_limit)
-
-        tau=0.5 # 1/(2pi*tau) = cutoff frequency
-        ts = 0.02 # Sample Time
+ 
+        tau=0.5 
+        ts = 0.02 
 
         self.vel_lpf = LowPassFilter(tau,ts)
         self.last_time = rospy.get_time()
         pass
 
     def control(self,current_vel,dbw_enabled,linear_vel,angular_vel):
-        # TODO: Change the arg, kwarg list to suit your needs
-        # Return throttle, brake, steer
+        '''
+        Args:
+            current_vel (Current Velocity): data subscribed
+            dbw_enabled (Whether enable dbw node): only matters when real test
+            linear_vel (Linear velocity): velocity move ahead
+            angular_vel (Angular velocity): yaw velocity
+
+        Returns:
+            throttle, brake, and steering values.
+        '''
 
         if not dbw_enabled:
             self.throttle_controller.reset()
@@ -56,10 +72,10 @@ class Controller(object):
 
         if linear_vel ==0.0 and current_vel<0.1:
             throttle=0
-            brake=400 #Nm - to hold the car in place if we are stopped at a light. acceleration-1m/s^2
+            brake=700 
         elif throttle<0.1 and vel_error<0:
             throttle=0
             decel=max(vel_error, self.EgoParam.decel_limit)
-            brake=abs(decel)*self.EgoParam.vehicle_mass *self.EgoParam.wheel_radius
+            brake=abs(decel)*self.EgoParam.total_vehicle_mass *self.EgoParam.wheel_radius
 
         return throttle, brake, steering
