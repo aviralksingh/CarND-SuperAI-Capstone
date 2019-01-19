@@ -1,4 +1,3 @@
-
 import rospy
 from pid import PID
 from lowpass import LowPassFilter
@@ -32,7 +31,8 @@ class Controller(object):
         return:
            throttle calculation functions
         '''
-        self.throttle_controller = PID(kp=0.3,ki=0.1,kd=0.0,mn = EgoParam.decel_limit,mx=EgoParam.accel_limit)
+        self.throttle_controller = PID(kp=0.4,ki=0.05,kd=0.0,mn = EgoParam.decel_limit,mx=0.50*(EgoParam.accel_limit))
+        self.brake_controller = PID(kp=100,ki=0.0,kd=1.0,mn = 0.0, mx=5000)
 
         tau=0.5
         ts = 0.02
@@ -48,10 +48,12 @@ class Controller(object):
             dbw_enabled (Whether enable dbw node): only matters when real test
             linear_vel (Linear velocity): velocity move ahead
             angular_vel (Angular velocity): yaw velocity
-
         Returns:
             throttle, brake, and steering values.
         '''
+        brake=0
+        vel_error=0  # needed for init
+
 
         if not dbw_enabled:
             self.throttle_controller.reset()
@@ -67,15 +69,23 @@ class Controller(object):
         sample_time = current_time - self.last_time
         self.last_time= current_time
 
-        throttle = self.throttle_controller.step(vel_error, sample_time)
-        brake=0
+        if vel_error > 0:
+            throttle = self.throttle_controller.step(vel_error, sample_time)
+            brake=0
+            self.brake_controller.reset()
+        else:
+            brake=self.brake_controller.step(-1.0*vel_error, sample_time)
+            throttle=0
+            self.throttle_controller.reset()
 
-        if linear_vel ==0.0 and current_vel<0.1:
+
+        if linear_vel ==0.0 and current_vel<0.2:   # low-speed exception to hold vehicle at rest
             throttle=0
-            brake=700
-        elif throttle<0.1 and vel_error<0:
-            throttle=0
-            decel=max(vel_error, self.EgoParam.decel_limit)
-            brake=abs(decel)*self.EgoParam.total_vehicle_mass *self.EgoParam.wheel_radius
+            brake=699
+#        elif throttle<0.1 and vel_error<0:
+#            throttle=0
+#            decel=max(vel_error, self.EgoParam.decel_limit)
+#            brake=abs(decel)*self.EgoParam.total_vehicle_mass *self.EgoParam.wheel_radius
 
         return throttle, brake, steering
+
