@@ -98,8 +98,8 @@ public:
     , initial_velocity_(5.0)
     , lookahead_distance_calc_ratio_(2.0)
     , minimum_lookahead_distance_(6.0)
-    , displacement_threshold_(0.2)
-    , relative_angle_threshold_(5.)
+    , displacement_threshold_(0.02) //Tuned to mitigate the wandering behavior of the car.
+    , relative_angle_threshold_(1.) //Tuned to mitigate the wandering behavior of the car.
     , waypoint_set_(false)
     , pose_set_(false)
     , velocity_set_(false)

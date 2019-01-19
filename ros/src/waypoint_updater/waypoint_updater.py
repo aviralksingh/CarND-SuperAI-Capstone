@@ -138,11 +138,11 @@ class WaypointUpdater(object):
 
             p= Waypoint()
             p.pose=wp.pose
-            stop_idx=max(self.stop_line_idx-closest_idx-2,0) # Two waypoints so that car nose stops at the line
+            stop_idx=max(self.stop_line_idx-closest_idx-5,0) # Two waypoints so that car nose stops at the line
             dist = self.distance(waypoints,i,stop_idx)
             vel= math.sqrt(2*MAX_DECEL*dist)
 
-            if vel<1.0 :
+            if ((vel<1.0) or ((self.stop_line_idx >= i) and (i >= stop_idx))):
                 vel=0.0
 
             p.twist.twist.linear.x= min (vel,wp.twist.twist.linear.x)
