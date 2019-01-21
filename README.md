@@ -6,11 +6,11 @@
 Team **SuperAI** Members <!-- omit in toc -->
 ---
 
-* [Aviral Singh](https://github.com/aviralksingh)
-* [Marco Marasca](https://github.com/Az4z3l)
-* [Thomas Brakel](https://github.com/TBrakel77)
-* [Chuqiao Dong](https://github.com/chd415)
-* [Bilal Elsheemy](https://github.com/bilalelsheemy)
+* [Aviral Singh](https://github.com/aviralksingh) (aviralksingh@gmail.com)
+* [Marco Marasca](https://github.com/Az4z3l) (marascamarco@gmail.com)
+* [Thomas Brakel](https://github.com/TBrakel77) (twbrakel@gmail.com)
+* [Bilal Elsheemy](https://github.com/bilalelsheemy) (belaalelsheemy93@gmail.com)
+* [Chuqiao Dong](https://github.com/chd415) (chd415@lehigh.edu)
 
 ## Table of Contents <!-- omit in toc -->
 - [Overview](#overview)
@@ -47,7 +47,7 @@ ROS Nodes
 
 ### [Traffic Light Detection](https://github.com/Az4z3l/CarND-Traffic-Light-Detection)
 
-The [traffic light detection node](./ros/src/tl_detection) is in charge of the part of the perception sub-system that needs to detect incoming traffic lights and their state. In this simple implementation the detector computes the position (in term of waypoint index) of the upcoming traffic light if its state is currently detected as a red light, so that the [waypoint updater](#waypoint-updater) can take the upcoming red light in generating a trajectory.
+The [traffic light detection node](./ros/src/tl_detector) is in charge of the part of the perception sub-system that needs to detect incoming traffic lights and their state. In this simple implementation the detector computes the position (in term of waypoint index) of the upcoming traffic light if its state is currently detected as a red light, so that the [waypoint updater](#waypoint-updater) can take the upcoming red light in generating a trajectory.
 
 The node subscribes to 3 topics:
 
