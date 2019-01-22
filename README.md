@@ -177,7 +177,7 @@ To install multiple versions of Ubuntu (in case you already have a different ver
 
 1. Clone the project repository
     ```bash
-    git clone https://github.com/aviralksingh/CarND-Capstone.git
+    git clone https://github.com/aviralksingh/CarND-SuperAI-Capstone.git
     ```
 
 2. Install python dependencies
