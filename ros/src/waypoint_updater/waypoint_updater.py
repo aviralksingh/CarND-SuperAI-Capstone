@@ -2,8 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import PoseStamped, TwistStamped
-from styx_msgs.msg import Lane, Waypoint
-from std_msgs.msg import Int32
+from styx_msgs.msg import Lane, Waypoint, TrafficLight, TrafficWaypoint
 from scipy.spatial import KDTree
 
 import math
@@ -44,7 +43,7 @@ class WaypointUpdater(object):
         self.base_waypoints_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
-        rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
+        rospy.Subscriber('/traffic_waypoint', TrafficWaypoint, self.traffic_cb)
         rospy.Subscriber('/current_velocity', TwistStamped, self.velocity_cb)
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
@@ -56,7 +55,6 @@ class WaypointUpdater(object):
         while not rospy.is_shutdown():
             if self.current_pose and self.waypoints_tree:
                 self.publish_waypoints()
-
             rate.sleep()
 
     def pose_cb(self, msg):
@@ -82,8 +80,8 @@ class WaypointUpdater(object):
 
     def traffic_cb(self, msg):
         # Callback for /traffic_waypoint message and return the stop line index data
-        self.stop_line_idx = msg.data
-
+        self.stop_line_idx = msg.waypoint_idx if msg.state == TrafficLight.RED else -1
+        
     def closest_waypoint_idx(self):
         ego_position = [self.current_pose.position.x, self.current_pose.position.y]
 
@@ -120,7 +118,7 @@ class WaypointUpdater(object):
             lane.waypoints = base_waypoints
         else:
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
-        rospy.loginfo("Closest stop line: [index=%d]", self.stop_line_idx)
+        #rospy.loginfo("Closest stop line: [index=%d]", self.stop_line_idx)
         return lane
 
     def decelerate_waypoints(self, waypoints, closest_idx):

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped, Pose
-from styx_msgs.msg import TrafficLightArray, TrafficLight
+from styx_msgs.msg import TrafficLightArray, TrafficLight, TrafficWaypoint
 from styx_msgs.msg import Lane
 from sensor_msgs.msg import Image
 from message_filters import ApproximateTimeSynchronizer, Subscriber
@@ -64,7 +63,7 @@ class TLDetector(object):
         self.synced_sub.registerCallback(self.synced_data_cb)
 
         # Publisher
-        self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
+        self.traffic_waypoint_pub = rospy.Publisher('/traffic_waypoint', TrafficWaypoint, queue_size=1)
 
         rospy.spin()
 
@@ -86,13 +85,18 @@ class TLDetector(object):
                 self.light_state_count = 0
                 self.light_state = light_state
             elif self.light_state_count >= STATE_COUNT_THRESHOLD:
-                light_waypoint_idx = light_waypoint_idx if light_state == TrafficLight.RED else -1
                 self.light_waypoint_idx = light_waypoint_idx
-                self.upcoming_red_light_pub.publish(Int32(light_waypoint_idx))
+                self.publish_traffic_waypoint()
             else:
-                self.upcoming_red_light_pub.publish(Int32(self.light_waypoint_idx))
+                self.publish_traffic_waypoint()
 
             self.light_state_count += 1
+
+    def publish_traffic_waypoint(self):
+        traffic_waypoint_msg = TrafficWaypoint()
+        traffic_waypoint_msg.waypoint_idx = self.light_waypoint_idx
+        traffic_waypoint_msg.state = self.light_state
+        self.traffic_waypoint_pub.publish(traffic_waypoint_msg)
 
     def waypoints_cb(self, msg):
         self.waypoints = msg.waypoints
