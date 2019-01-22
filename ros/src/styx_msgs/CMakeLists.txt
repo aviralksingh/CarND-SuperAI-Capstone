@@ -54,6 +54,7 @@ add_message_files(
   FILES
   TrafficLight.msg
   TrafficLightArray.msg
+  TrafficWaypoint.msg
   Waypoint.msg
   Lane.msg
 )

@@ -39,6 +39,10 @@ class WaypointUpdater(object):
         self.waypoints_2d = None
         self.waypoints_tree = None
 
+        #Yellow Light Detections
+        self.stoplight_state=None
+        self.yellowlight_idx = -1
+        self.last_stop_line_idx = -1
         # Saves the subscriber so that it can unregister in its callback
         self.base_waypoints_sub = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
@@ -80,8 +84,9 @@ class WaypointUpdater(object):
 
     def traffic_cb(self, msg):
         # Callback for /traffic_waypoint message and return the stop line index data
-        self.stop_line_idx = msg.waypoint_idx if msg.state == TrafficLight.RED else -1
-        
+        self.stop_line_idx = msg.waypoint_idx  if msg.state == TrafficLight.RED or msg.state == TrafficLight.YELLOW else -1
+        self.stoplight_state = msg.state
+
     def closest_waypoint_idx(self):
         ego_position = [self.current_pose.position.x, self.current_pose.position.y]
 
@@ -114,10 +119,15 @@ class WaypointUpdater(object):
         farthest_idx = closest_idx + LOOKAHEAD_WPS
         base_waypoints = self.waypoints[closest_idx:farthest_idx]
 
-        if self.stop_line_idx == -1 or (self.stop_line_idx >= farthest_idx):
+        if self.last_stop_line_idx==-1 and self.stop_line_idx <= LOOKAHEAD_WPS and self.stoplight_state == TrafficLight.YELLOW:
+            self.yellowlight_idx=self.stop_line_idx
+
+        if self.stop_line_idx == -1 or (self.stop_line_idx >= farthest_idx) or (self.yellowlight_idx <=LOOKAHEAD_WPS and self.yellowlight_idx>0):
             lane.waypoints = base_waypoints
         else:
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
+
+        self.last_stop_line_idx=self.stop_line_idx
         #rospy.loginfo("Closest stop line: [index=%d]", self.stop_line_idx)
         return lane
 
