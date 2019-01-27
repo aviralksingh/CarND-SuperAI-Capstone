@@ -130,9 +130,10 @@ class TLDetector(object):
 
         closest_light_state = TrafficLight.UNKNOWN
         closest_light, closest_light_idx = self.find_closest_light(vehicle_idx)
-        
+
         if closest_light is not None:
             closest_light_state = self.get_light_state(closest_light, camera_image)
+            rospy.logdebug('Closest light state: %s (Waypoint index: %s)', closest_light_state, closest_light_idx)
 
         return closest_light_idx, closest_light_state
 
